@@ -181,6 +181,9 @@ def ils(n,dip,F, criteria_flag):
 #         cost  result[]  plot[]  
   return (sa[1], sa[2], list_plot)
     
+def timer():
+    import time
+    return time.time()
 
 # execution tests
 def execute_mean_test(cicles, path, criteria_flag):
@@ -215,9 +218,6 @@ def execute_mean_test(cicles, path, criteria_flag):
             i += 1
     return (best_cost, best_result, mean, mean_time)                
  
-def timer():
-    import time
-    return time.time()
 
 
 ########################################### EXECUTION ##################################################
@@ -239,16 +239,32 @@ else:
     
     #SAVE THE MEAN SIZE OF INTERACTIONS OF EACH 50 MEAN TEST 
     path="./qpa/tai50b.dat"
-    
-    res = execute_mean_test(1,path, 0) 
+    a = 0
+    while a < 3:
+        res = execute_mean_test(1, path, a) 
+       
+        t_color = ('blue' if a == 0 else ('red' if a == 1 else 'green')) 
 
-    plt.title('actual name')
-    plt.plot(res[2])
-    plt.ylabel('cost')
-    plt.xlabel('iteractions')
-    text =  "best cost: " + str(res[0])
-    plt.text(0.02, 1, text, fontsize=14, transform=plt.gcf().transFigure)
-    plt.savefig('plot3.png', bbox_inches='tight')
+        plt.title('actual name')
+        plt.plot(res[2], color=t_color)
+        plt.ylabel('cost')
+        plt.xlabel('iteractions')
+
+        text =  ('better' if a ==0 else ('rw' if a == 1 else 'lsmc'))
+        plt.text(0.8, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
+
+        text =  "best cost: " + str(res[0])
+        plt.text(0.02, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
+        
+        text =  "mean time " + str('%.5f'%(res[3]))
+        plt.text(0.4, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
+    
+        #put the results in a file
+
+        a += 1 
+
+    #plt.show()
+    plt.savefig('plot8.png', bbox_inches='tight')
     print("mean bc:" + str(res[0]))
 
 
