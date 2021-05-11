@@ -277,6 +277,7 @@ else:
             a += 1 
 
         plt.savefig(results_dir + os.path.sep + "plot_" + os.path.splitext(problem_file)[0] + ".png" , bbox_inches='tight')
+        plt.clf()
     print("end")
 
 
