@@ -201,7 +201,7 @@ def execute_mean_test(cicles, path, criteria_flag):
     mean_cost = result[0]
     mean_time = end - start
     i=1
-    while i <= cicles:
+    while i < cicles:
             n, F, D = load_matrices(path)
             dip = permutation(n, np.arange(n), D) 
 
@@ -223,7 +223,6 @@ def execute_mean_test(cicles, path, criteria_flag):
     return (best_cost, best_result, mean, mean_time, mean_cost)                
  
 
-
 ########################################### EXECUTION ##################################################
 
 local_path = os.getcwd()
@@ -235,54 +234,50 @@ try:
 except OSError:
     print("could not create images folder, it may already exists")
 else:
-    #TODO 
-        #FOR EACH FILE IN FILE NAMES
-    # RECOVER THE BEST VALUE OF EACH AND THE MEAN TIME AND PUT IN A FILE WITH THE INDICATED NAME
-    # SAVE THE BEST RESULT VECTOR IN A FILE TOO
-    #SAVE THE MEAN SIZE OF INTERACTIONS OF EACH 50 MEAN TEST 
+    for problem_file in file_names:
+        path = local_path + os.path.sep + 'qpa' + os.path.sep + problem_file
+        a = 0
+        #FOR EACH ACCEPTANCE CRITERIA 0=BETTER 1=RW 2=LSMC
+        while a < 3:
+            #MEAN RESULTS OF 50 TESTS
+            number_of_tests = 50
+            res = execute_mean_test(number_of_tests, path, a) 
+           
+            t_color = ('blue' if a == 0 else ('red' if a == 1 else 'green')) 
 
-    # path="./qpa/tai50b.dat"
-    path = local_path + os.path.sep + 'qpa' + os.path.sep + file_names[0]
-    a = 0
-    while a < 3:
-        res = execute_mean_test(1, path, a) 
-       
-        t_color = ('blue' if a == 0 else ('red' if a == 1 else 'green')) 
+            plt.title(os.path.splitext(problem_file)[0])
+            plt.plot(res[2], color=t_color)
+            plt.ylabel('cost')
+            plt.xlabel('iteractions')
 
-        plt.title('actual name')
-        plt.plot(res[2], color=t_color)
-        plt.ylabel('cost')
-        plt.xlabel('iteractions')
+            text =  "best cost: " + str(res[0])
+            plt.text(0.02, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
+            
+            text =  "mean cost: " + str(int((res[4])))
+            plt.text(0.4, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
 
-        text =  "best cost: " + str(res[0])
-        plt.text(0.02, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
+            text =  "mean time: " + str('%.5f'%(res[3]))
+            plt.text(0.8, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
         
-        text =  "mean cost: " + str(int((res[4])))
-        plt.text(0.4, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
+            text =  ('better' if a ==0 else ('rw' if a == 1 else 'lsmc'))
+            plt.text(1.2, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
 
-        text =  "mean time: " + str('%.5f'%(res[3]))
-        plt.text(0.8, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
-    
-        text =  ('better' if a ==0 else ('rw' if a == 1 else 'lsmc'))
-        plt.text(1.2, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
+            #put the results in a file
+            # (best_cost, best_result, mean, mean_time, mean_cost)                
+            bash_cmd = "echo \"" + problem_file +  (' better' if a ==0 else (' rw' if a == 1 else ' lsmc')) + "\" >> " + result_file
+            bash_cmd += " && echo \"" + str(res[0]) + "\" >> " + result_file
+            bash_cmd += " && echo \"" + str(res[1]) + "\" >> " + result_file
+            bash_cmd += " && echo \"" + str('%.5f'%(res[3])) + "\" >> " + result_file
+            bash_cmd += " && echo \"" + str(int(res[4])) + "\" >> " + result_file
+            bash_cmd += " && echo \"\"  >> " + result_file
+            
+            error = subprocess.run(bash_cmd, shell=True, check=True, text=True)        
+            #print(error)
 
-        #put the results in a file
-        # (best_cost, best_result, mean, mean_time, mean_cost)                
-        bash_cmd = "echo \"" + file_names[0] +  (' better' if a ==0 else (' rw' if a == 1 else ' lsmc')) + "\" >> " + result_file
-        bash_cmd += " && echo \"" + str(res[0]) + "\" >> " + result_file
-        bash_cmd += " && echo \"" + str(res[1]) + "\" >> " + result_file
-        bash_cmd += " && echo \"" + str('%.5f'%(res[3])) + "\" >> " + result_file
-        bash_cmd += " && echo \"" + str(int(res[4])) + "\" >> " + result_file
-        bash_cmd += " && echo \"\"  >> " + result_file
-        
-        error = subprocess.run(bash_cmd, shell=True, check=True, text=True)        
-        #print(error)
+            a += 1 
 
-        a += 1 
-
-    #plt.show()
-    plt.savefig('plot8.png', bbox_inches='tight')
-    print("mean bc:" + str(res[0]))
+        plt.savefig(results_dir + os.path.sep + "plot_" + os.path.splitext(problem_file)[0] + ".png" , bbox_inches='tight')
+    print("end")
 
 
 
