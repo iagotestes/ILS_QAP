@@ -7,6 +7,7 @@ import math
 import secrets
 import numpy as np
 import os
+import subprocess
 #import time
 from matplotlib import pyplot as plt
 
@@ -197,6 +198,7 @@ def execute_mean_test(cicles, path, criteria_flag):
     mean = result[2]
     best_result = result[1]
     best_cost = result[0]
+    mean_cost = result[0]
     mean_time = end - start
     i=1
     while i <= cicles:
@@ -214,9 +216,11 @@ def execute_mean_test(cicles, path, criteria_flag):
                 best_result = result[1]
             mean = [x + y for x, y in zip(mean, result[2])]
             mean = [x / 2 for x in mean]
+            mean_cost = (mean_cost + result[0]) / 2
+
             print(i)
             i += 1
-    return (best_cost, best_result, mean, mean_time)                
+    return (best_cost, best_result, mean, mean_time, mean_cost)                
  
 
 
@@ -224,21 +228,21 @@ def execute_mean_test(cicles, path, criteria_flag):
 
 local_path = os.getcwd()
 file_names = os.listdir("./qpa")
-imgs_dir = local_path + os.path.sep + "graphs"
+results_dir = local_path + os.path.sep + "results"
+result_file = results_dir + os.path.sep + "results.txt"
 try: 
-    os.mkdir(imgs_dir)
+    os.mkdir(results_dir)
 except OSError:
-    print("could not create images folder")
+    print("could not create images folder, it may already exists")
 else:
     #TODO 
-    # LOOP ALL OF 3 KINDS OF ACCEPTANCE CRITERIA FOR EACH FILE IN FILE NAMES
-    # PLOT THE MEAN OF 50 TESTS OF EACH IN ONE IMAGE WITH LABELS INDICATING WHO IS WHO
+        #FOR EACH FILE IN FILE NAMES
     # RECOVER THE BEST VALUE OF EACH AND THE MEAN TIME AND PUT IN A FILE WITH THE INDICATED NAME
-    # SAVE THE BEST RESULT VECTOR IN A FILE TO
-    # PLOT THE BEST RESULT IN IMAGE FORMAT ALL TREE IN ONE IMAGE
-    
+    # SAVE THE BEST RESULT VECTOR IN A FILE TOO
     #SAVE THE MEAN SIZE OF INTERACTIONS OF EACH 50 MEAN TEST 
-    path="./qpa/tai50b.dat"
+
+    # path="./qpa/tai50b.dat"
+    path = local_path + os.path.sep + 'qpa' + os.path.sep + file_names[0]
     a = 0
     while a < 3:
         res = execute_mean_test(1, path, a) 
@@ -250,16 +254,29 @@ else:
         plt.ylabel('cost')
         plt.xlabel('iteractions')
 
-        text =  ('better' if a ==0 else ('rw' if a == 1 else 'lsmc'))
-        plt.text(0.8, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
-
         text =  "best cost: " + str(res[0])
         plt.text(0.02, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
         
-        text =  "mean time " + str('%.5f'%(res[3]))
+        text =  "mean cost: " + str(int((res[4])))
         plt.text(0.4, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
+
+        text =  "mean time: " + str('%.5f'%(res[3]))
+        plt.text(0.8, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
     
+        text =  ('better' if a ==0 else ('rw' if a == 1 else 'lsmc'))
+        plt.text(1.2, (1+a*0.05), text, fontsize=14, transform=plt.gcf().transFigure, c=t_color )
+
         #put the results in a file
+        # (best_cost, best_result, mean, mean_time, mean_cost)                
+        bash_cmd = "echo \"" + file_names[0] +  (' better' if a ==0 else (' rw' if a == 1 else ' lsmc')) + "\" >> " + result_file
+        bash_cmd += " && echo \"" + str(res[0]) + "\" >> " + result_file
+        bash_cmd += " && echo \"" + str(res[1]) + "\" >> " + result_file
+        bash_cmd += " && echo \"" + str('%.5f'%(res[3])) + "\" >> " + result_file
+        bash_cmd += " && echo \"" + str(int(res[4])) + "\" >> " + result_file
+        bash_cmd += " && echo \"\"  >> " + result_file
+        
+        error = subprocess.run(bash_cmd, shell=True, check=True, text=True)        
+        #print(error)
 
         a += 1 
 
